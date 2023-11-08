@@ -1,7 +1,8 @@
 package com.tdd.membership.service;
 
 import com.tdd.membership.constants.MembershipType;
-import com.tdd.membership.dto.MembershipResponse;
+import com.tdd.membership.dto.MembershipAddResponse;
+import com.tdd.membership.dto.MembershipDetailResponse;
 import com.tdd.membership.entity.Membership;
 import com.tdd.membership.exception.MembershipErrorResult;
 import com.tdd.membership.exception.MembershipException;
@@ -11,6 +12,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.util.Arrays;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -37,7 +41,7 @@ public class MembershipServiceTest {
         doReturn(membership()).when(membershipRepository).save(any(Membership.class));
 
         // when
-        final MembershipResponse result = target.addMembership(userId, membershipType, point);
+        final MembershipAddResponse result = target.addMembership(userId, membershipType, point);
 
         // then
         assertThat(result.getId()).isNotNull();
@@ -59,6 +63,22 @@ public class MembershipServiceTest {
 
         // then
         assertThat(result.getErrorResult()).isEqualTo(MembershipErrorResult.DUPLICATED_MEMBERSHIP_REGISTER);
+    }
+
+    @Test
+    public void 멤버십목록조회() throws Exception {
+        // given
+        doReturn(Arrays.asList(
+                Membership.builder().build(),
+                Membership.builder().build(),
+                Membership.builder().build()
+        )).when(membershipRepository).findAllByUserId(userId);
+
+        // when
+        final List<MembershipDetailResponse> result = target.getMembershipList(userId);
+
+        // then
+        assertThat(result.size()).isEqualTo(3);
     }
 
     private Membership membership() {

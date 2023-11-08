@@ -2,8 +2,9 @@ package com.tdd.membership.controller;
 
 import com.google.gson.Gson;
 import com.tdd.membership.constants.MembershipType;
+import com.tdd.membership.dto.MembershipDetailResponse;
 import com.tdd.membership.dto.MembershipRequest;
-import com.tdd.membership.dto.MembershipResponse;
+import com.tdd.membership.dto.MembershipAddResponse;
 import com.tdd.membership.exception.GlobalExceptionHandler;
 import com.tdd.membership.exception.MembershipErrorResult;
 import com.tdd.membership.exception.MembershipException;
@@ -24,6 +25,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.stream.Stream;
 
 import static com.tdd.membership.constants.MembershipConstants.USER_ID_HEADER;
@@ -170,12 +172,12 @@ public class MembershipControllerTest {
     public void 멤버십등록성공() throws Exception {
         // given
         final String url = "/api/v1/memberships";
-        final MembershipResponse membershipResponse = MembershipResponse.builder()
+        final MembershipAddResponse membershipAddResponse = MembershipAddResponse.builder()
                 .id(-1L)
                 .membershipType(MembershipType.NAVER)
                 .build();
 
-        doReturn(membershipResponse).when(membershipService).addMembership("12345", MembershipType.NAVER, 10000);
+        doReturn(membershipAddResponse).when(membershipService).addMembership("12345", MembershipType.NAVER, 10000);
 
         // when
         final ResultActions resultActions = mockMvc.perform(
@@ -188,12 +190,47 @@ public class MembershipControllerTest {
         // then
         resultActions.andExpect(status().isCreated());
 
-        final MembershipResponse response = gson.fromJson(resultActions.andReturn()
+        final MembershipAddResponse response = gson.fromJson(resultActions.andReturn()
                 .getResponse()
-                .getContentAsString(StandardCharsets.UTF_8), membershipResponse.getClass());
+                .getContentAsString(StandardCharsets.UTF_8), membershipAddResponse.getClass());
 
         assertThat(response.getId()).isNotNull();
         assertThat(response.getMembershipType()).isEqualTo(MembershipType.NAVER);
+    }
+
+    @Test
+    public void 멤버십목록조회실패_사용자식별값이헤더에없음() throws Exception {
+        // given
+        final String url = "/api/v1/memberships";
+
+        // when
+        final ResultActions resultActions = mockMvc.perform(
+                MockMvcRequestBuilders.get(url)
+        );
+
+        // then
+        resultActions.andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void 멤버십목록조회성공() throws Exception {
+        // given
+        final String url = "/api/v1/memberships";
+
+        doReturn(Arrays.asList(
+                MembershipDetailResponse.builder().build(),
+                MembershipDetailResponse.builder().build(),
+                MembershipDetailResponse.builder().build()
+        )).when(membershipService).getMembershipList("12345");
+
+        // when
+        final ResultActions resultActions = mockMvc.perform(
+                MockMvcRequestBuilders.get(url)
+                        .header(USER_ID_HEADER, "12345")
+        );
+
+        // then
+        resultActions.andExpect(status().isOk());
     }
 
     private MembershipRequest membershipRequest(final Integer point, final MembershipType membershipType) {

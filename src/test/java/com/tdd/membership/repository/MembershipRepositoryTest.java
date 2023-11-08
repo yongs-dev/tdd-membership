@@ -7,6 +7,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.test.annotation.Rollback;
 
+import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
@@ -16,7 +18,6 @@ public class MembershipRepositoryTest {
     public MembershipRepository membershipRepository;
 
     @Test
-    @Rollback(false)
     void 멤버십등록() {
         // given
         final Membership membership = Membership.builder()
@@ -55,5 +56,41 @@ public class MembershipRepositoryTest {
         assertThat(result.getUserId()).isEqualTo("userId");
         assertThat(result.getMembershipType()).isEqualTo(MembershipType.NAVER);
         assertThat(result.getPoint()).isEqualTo(10000);
+    }
+
+    @Test
+    public void 멤버십조회_사이즈가0() throws Exception {
+        // given
+
+        // when
+        List<Membership> result = membershipRepository.findAllByUserId("userId");
+
+        // then
+        assertThat(result.size()).isEqualTo(0);
+    }
+    
+    @Test
+    public void 멤버십조회_사이즈가2() throws Exception {
+        // given
+        final Membership naverMembership = Membership.builder()
+                .userId("userId")
+                .membershipType(MembershipType.NAVER)
+                .point(10000)
+                .build();
+
+        final Membership kakaoMembership = Membership.builder()
+                .userId("userId")
+                .membershipType(MembershipType.KAKAO)
+                .point(10000)
+                .build();
+
+        membershipRepository.save(naverMembership);
+        membershipRepository.save(kakaoMembership);
+
+        // when
+        List<Membership> result = membershipRepository.findAllByUserId("userId");
+
+        // then
+        assertThat(result.size()).isEqualTo(2);
     }
 }
