@@ -9,5 +9,5 @@ import java.util.List;
 public interface MembershipRepository extends JpaRepository<Membership, Long> {
     Membership findByUserIdAndMembershipType(final String userId, final MembershipType membershipType);
 
-    List<Membership> findAllByUserId(String userId);
+    List<Membership> findAllByUserId(final String userId);
 }
