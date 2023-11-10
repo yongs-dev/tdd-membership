@@ -27,6 +27,7 @@ public class Membership {
     @Enumerated(EnumType.STRING)
     private MembershipType membershipType;
 
+    @Setter
     @Column(nullable = false)
     @ColumnDefault("0")
     private Integer point;
